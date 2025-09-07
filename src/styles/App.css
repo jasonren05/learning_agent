@@ -1,0 +1,193 @@
+/* 登录页面样式 */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 32px !important;
+  color: #333;
+  font-weight: 600;
+}
+
+.login-footer {
+  text-align: center;
+  margin-top: 16px;
+  color: #666;
+}
+
+.login-footer a {
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.login-footer a:hover {
+  color: #40a9ff;
+}
+
+/* 布局样式 */
+.logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #001529;
+  margin-bottom: 16px;
+}
+
+.logo h2 {
+  color: #fff;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* 仪表板样式 */
+.dashboard {
+  padding: 0;
+}
+
+.dashboard .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard .ant-statistic-title {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.dashboard .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* 笔记页面样式 */
+.notes-page .ant-list-item {
+  padding: 16px 24px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  transition: all 0.3s ease;
+}
+
+.notes-page .ant-list-item:hover {
+  background: #f5f5f5;
+  border-color: #d9d9d9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.notes-page .ant-list-item-meta-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* 英语学习页面样式 */
+.english-study .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.english-study .ant-typography {
+  line-height: 1.8;
+}
+
+/* 题目解析页面样式 */
+.problem-solver .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.problem-solver .ant-input {
+  border-radius: 8px;
+}
+
+.problem-solver .ant-btn {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* 进度页面样式 */
+.progress-page .ant-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.progress-page .ant-statistic-title {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.progress-page .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .login-card {
+    margin: 0 16px;
+  }
+  
+  .dashboard .ant-col {
+    margin-bottom: 16px;
+  }
+  
+  .notes-page .ant-list-item {
+    padding: 12px 16px;
+  }
+}
+
+/* 动画效果 */
+.ant-card {
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.ant-btn {
+  transition: all 0.3s ease;
+}
+
+.ant-list-item {
+  transition: all 0.3s ease;
+}
+
+/* 自定义滚动条 */
+.ant-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ant-modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.ant-modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.ant-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

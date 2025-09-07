@@ -1,0 +1,11 @@
+# 豆包AI API配置
+ARK_API_KEY=55a1aa97-c6ea-4dc3-af50-c38d309bdb56
+ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+ARK_MODEL_ID=doubao-seed-1-6-250615
+
+# Flask应用配置
+FLASK_SECRET_KEY=0913ea0ffcc8ec20e42ed306eaa2c83c3918d31ca69acacbfc184afca34272ef
+DATABASE_URL=sqlite:///learning_assistant.db
+
+# JWT配置
+JWT_SECRET_KEY=0f521b9a94f7286b1e0b5c6b4fdfe1e689aa7cb62f5719e6f0935c91c9561a29
