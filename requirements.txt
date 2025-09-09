@@ -9,6 +9,7 @@ python-pptx==0.6.23
 Werkzeug==3.0.1
 python-dotenv==1.0.0
 bcrypt==4.1.2
-requests==2.31.0
+requests>=2.32.3
 Pillow==10.2.0
 gunicorn==21.2.0
+packaging>=24.0
