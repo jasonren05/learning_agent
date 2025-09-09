@@ -15,8 +15,8 @@ apps:
   # 前端 React 应用  
   - port: 5173
     run: |
-      npm install &&
-      npm run dev
+      chmod +x fix_frontend.sh &&
+      ./fix_frontend.sh || (rm -rf node_modules package-lock.json && npm cache clean --force && npm install --force && npm run dev)
     root: ./
     name: 学习助手前端
     description: React + Vite 前端应用

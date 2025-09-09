@@ -8,8 +8,9 @@ export default defineConfig({
     port: 5173,       // 明确指定端口
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
-        changeOrigin: true
+        target: 'http://172.24.0.2:5001',
+        changeOrigin: true,
+        secure: false
       }
     }
   }

@@ -40,7 +40,15 @@ cors = CORS(
     app,
     resources={
         r"/api/*": {
-            "origins": ["http://localhost:5173", "https://*.cloudstudio.net", "https://*.coding.net", "*"],
+            "origins": [
+                "http://localhost:5173", 
+                "http://172.24.0.2:5173",
+                "https://*.cloudstudio.net", 
+                "https://*.coding.net",
+                "http://*.cloudstudio.net",
+                "http://*.coding.net",
+                "*"
+            ],
             "supports_credentials": True,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
         }
