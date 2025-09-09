@@ -1,22 +1,24 @@
-# Cloud Studio 学习助手项目配置文件
-# 该项目包含 React 前端和 Flask 后端，需要同时运行两个服务
-
-autoOpen: true # 打开工作空间时自动运行所有应用
+# Cloud Studio 运行配置文件
+autoOpen: true # 打开工作空间时自动开启所有应用的预览
 apps:
-  # 后端 Flask API 服务（生产环境）
+  # 后端 Flask 应用
   - port: 5001
-    run: pyenv shell 3.11.1 && pip install --upgrade pip && pip install -r requirements.txt && gunicorn -c gunicorn.conf.py app:app
+    run: |
+      pip3 install --user -r requirements.txt &&
+      python3 app.py
     root: ./
-    name: Flask 后端 API
-    description: 学习助手后端服务（生产环境 gunicorn），提供用户认证、内容生成等API接口
+    name: 学习助手后端API
+    description: Flask 后端服务，提供 AI 学习助手功能
     autoOpen: true
-    autoPreview: false  # 后端API不需要预览窗口
-
-  # 前端 React 应用（支持外部访问）
+    autoPreview: false
+  
+  # 前端 React 应用  
   - port: 5173
-    run: npm install && npm run dev -- --host 0.0.0.0
+    run: |
+      npm install &&
+      npm run dev
     root: ./
-    name: React 前端应用
-    description: 学习助手前端界面（支持外部访问），提供用户交互和内容展示
+    name: 学习助手前端
+    description: React + Vite 前端应用
     autoOpen: true
-    autoPreview: true   # 前端应用自动打开预览窗口
+    autoPreview: true
