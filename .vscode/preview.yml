@@ -3,20 +3,20 @@
 
 autoOpen: true # 打开工作空间时自动运行所有应用
 apps:
-  # 后端 Flask API 服务
+  # 后端 Flask API 服务（生产环境）
   - port: 5001
-    run: python app.py
+    run: pyenv shell 3.11.1 && pip install -r requirements.txt && gunicorn -c gunicorn.conf.py app:app
     root: ./
     name: Flask 后端 API
-    description: 学习助手后端服务，提供用户认证、内容生成等API接口
+    description: 学习助手后端服务（生产环境 gunicorn），提供用户认证、内容生成等API接口
     autoOpen: true
     autoPreview: false  # 后端API不需要预览窗口
 
-  # 前端 React 应用
+  # 前端 React 应用（支持外部访问）
   - port: 5173
-    run: npm run dev
+    run: npm install && npm run dev -- --host 0.0.0.0
     root: ./
     name: React 前端应用
-    description: 学习助手前端界面，提供用户交互和内容展示
+    description: 学习助手前端界面（支持外部访问），提供用户交互和内容展示
     autoOpen: true
     autoPreview: true   # 前端应用自动打开预览窗口
