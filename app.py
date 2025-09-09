@@ -19,6 +19,7 @@ from pptx import Presentation
 import requests
 from io import BytesIO
 from PIL import Image
+from pathlib import Path
 
 # 加载环境变量
 load_dotenv()
@@ -35,7 +36,16 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
-cors = CORS(app)
+cors = CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5173"],
+            "supports_credentials": True,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        }
+    }
+)
 jwt = JWTManager(app)
 
 # 初始化AI客户端
@@ -364,7 +374,7 @@ def register():
     db.session.add(user)
     db.session.commit()
     
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     return jsonify({'access_token': access_token, 'user_id': user.id})
 
 @app.route('/api/login', methods=['POST'])
@@ -373,7 +383,8 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     
     if user and check_password_hash(user.password_hash, data['password']):
-        access_token = create_access_token(identity=user.id)
+        # JWT 规范要求 sub 为字符串，避免出现 422 错误
+        access_token = create_access_token(identity=str(user.id))
         return jsonify({'access_token': access_token, 'user_id': user.id})
     
     return jsonify({'error': '用户名或密码错误'}), 401
@@ -530,7 +541,8 @@ def analyze_problems():
 @jwt_required()
 def english_study():
     user_id = get_jwt_identity()
-    user = db.session.get(User, user_id)
+    # 修正：JWT identity 现在为字符串，需要转为整数以查询数据库
+    user = db.session.get(User, int(user_id))
     data = request.get_json()
     text = data.get('text', '')
     is_image = data.get('is_image', False)
@@ -546,6 +558,44 @@ def english_study():
         # 保存优化后的内容
         save_id = save_enhanced_content(user_id, text, study_material, 'english', is_image)
         
+        return jsonify({
+            'study_material': study_material,
+            'save_id': save_id
+        })
+    else:
+        return jsonify({'error': 'AI服务暂时不可用'}), 500
+
+@app.route('/api/english-study-upload', methods=['POST'])
+@jwt_required()
+def english_study_upload():
+    """英语学习文件直传接口：支持 doc/docx/pdf/ppt/pptx/txt 及图片"""
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    if 'file' not in request.files:
+        return jsonify({'error': '没有文件'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': '没有选择文件'}), 400
+
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(file_path)
+
+    file_type = filename.split('.')[-1].lower()
+    is_image = file_type in ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+
+    # 提取为可用于AI的文本或图片base64
+    extracted = process_uploaded_file(file_path, file_type)
+
+    if not extracted:
+        return jsonify({'error': '无法从文件中提取内容'}), 400
+
+    study_material = generate_english_study_material(extracted, user.english_level, is_image)
+
+    if study_material:
+        save_id = save_enhanced_content(int(user_id), extracted, study_material, 'english', is_image)
         return jsonify({
             'study_material': study_material,
             'save_id': save_id
@@ -572,6 +622,115 @@ def record_vocabulary():
     
     db.session.commit()
     return jsonify({'message': '记录已保存'})
+
+@app.route('/api/history', methods=['GET'])
+@jwt_required()
+def list_history():
+    """列出当前用户保存的优化内容（支持按类型过滤）"""
+    user_id = get_jwt_identity()
+    content_type = request.args.get('type')  # note | problem | english | None
+
+    q = EnhancedContent.query.filter_by(user_id=int(user_id)).order_by(EnhancedContent.created_at.desc())
+    if content_type:
+        q = q.filter_by(content_type=content_type)
+
+    items = q.all()
+    result = [{
+        'id': item.id,
+        'content_type': item.content_type,
+        'filename': os.path.basename(item.file_path) if item.file_path else None,
+        'file_path': item.file_path,
+        'is_image': item.is_image,
+        'created_at': item.created_at.isoformat()
+    } for item in items]
+
+    return jsonify(result)
+
+@app.route('/api/history/<int:item_id>', methods=['GET'])
+@jwt_required()
+def get_history_item(item_id: int):
+    """获取单条优化内容，返回Markdown文本与元数据"""
+    user_id = get_jwt_identity()
+    item = EnhancedContent.query.filter_by(id=item_id, user_id=int(user_id)).first()
+    if not item:
+        return jsonify({'error': '记录不存在'}), 404
+
+    content_text = None
+    if item.file_path and os.path.exists(item.file_path):
+        try:
+            with open(item.file_path, 'r', encoding='utf-8') as f:
+                content_text = f.read()
+        except Exception as e:
+            return jsonify({'error': f'读取文件失败: {e}'}), 500
+    else:
+        # 兜底：直接返回数据库中的文本
+        content_text = item.enhanced_content or ''
+
+    return jsonify({
+        'id': item.id,
+        'content_type': item.content_type,
+        'filename': os.path.basename(item.file_path) if item.file_path else None,
+        'created_at': item.created_at.isoformat(),
+        'content': content_text
+    })
+
+@app.route('/api/history/<int:item_id>/download', methods=['GET'])
+@jwt_required()
+def download_history_item(item_id: int):
+    """下载保存的Markdown文件"""
+    user_id = get_jwt_identity()
+    item = EnhancedContent.query.filter_by(id=item_id, user_id=int(user_id)).first()
+    if not item or not item.file_path or not os.path.exists(item.file_path):
+        return jsonify({'error': '文件不存在'}), 404
+    return send_file(item.file_path, as_attachment=True, download_name=os.path.basename(item.file_path))
+
+@app.route('/api/history/<int:item_id>', methods=['PUT'])
+@jwt_required()
+def update_history_item(item_id: int):
+    """更新已保存内容（编辑优化后的Markdown文本）"""
+    user_id = get_jwt_identity()
+    item = EnhancedContent.query.filter_by(id=item_id, user_id=int(user_id)).first()
+    if not item:
+        return jsonify({'error': '记录不存在'}), 404
+
+    data = request.get_json() or {}
+    new_content = data.get('content', '')
+    if new_content is None:
+        return jsonify({'error': '内容不能为空'}), 400
+
+    # 更新数据库
+    item.enhanced_content = new_content
+    db.session.commit()
+
+    # 同步更新磁盘文件
+    try:
+        if item.file_path:
+            with open(item.file_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+    except Exception as e:
+        return jsonify({'error': f'写入文件失败: {e}'}), 500
+
+    return jsonify({'message': '更新成功'})
+
+@app.route('/api/history/<int:item_id>', methods=['DELETE'])
+@jwt_required()
+def delete_history_item(item_id: int):
+    """删除记录及其文件"""
+    user_id = get_jwt_identity()
+    item = EnhancedContent.query.filter_by(id=item_id, user_id=int(user_id)).first()
+    if not item:
+        return jsonify({'error': '记录不存在'}), 404
+
+    # 删除文件
+    try:
+        if item.file_path and os.path.exists(item.file_path):
+            os.remove(item.file_path)
+    except Exception:
+        pass
+
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({'message': '删除成功'})
 
 @app.route('/api/progress', methods=['GET'])
 @jwt_required()

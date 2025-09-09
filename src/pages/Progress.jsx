@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Card, Row, Col, Statistic, Typography, Spin, Progress as AntProgress } from 'antd'
+import { Card, Row, Col, Statistic, Typography, Spin } from 'antd'
 import { 
-  TrophyOutlined, 
   FileTextOutlined, 
-  EyeOutlined,
-  ClockCircleOutlined
+  EyeOutlined
 } from '@ant-design/icons'
 import Layout from '../components/Layout'
 import { api } from '../utils/api'
@@ -41,19 +39,7 @@ function Progress() {
     )
   }
 
-  const getMasteryColor = (level) => {
-    if (level >= 80) return '#52c41a'
-    if (level >= 60) return '#faad14'
-    if (level >= 40) return '#fa8c16'
-    return '#f5222d'
-  }
-
-  const getMasteryStatus = (level) => {
-    if (level >= 80) return '优秀'
-    if (level >= 60) return '良好'
-    if (level >= 40) return '一般'
-    return '需要加强'
-  }
+  // 已移除掌握度相关逻辑
 
   return (
     <Layout>
@@ -61,7 +47,7 @@ function Progress() {
         <Title level={2}>学习进度报告</Title>
         
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={12}>
             <Card>
               <Statistic
                 title="总笔记数量"
@@ -71,7 +57,7 @@ function Progress() {
               />
             </Card>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={12}>
             <Card>
               <Statistic
                 title="总访问次数"
@@ -81,63 +67,9 @@ function Progress() {
               />
             </Card>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="平均掌握度"
-                value={progressData?.average_mastery || 0}
-                suffix="%"
-                prefix={<TrophyOutlined />}
-                valueStyle={{ color: getMasteryColor(progressData?.average_mastery || 0) }}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} lg={6}>
-            <Card>
-              <Statistic
-                title="学习状态"
-                value={getMasteryStatus(progressData?.average_mastery || 0)}
-                prefix={<ClockCircleOutlined />}
-                valueStyle={{ color: getMasteryColor(progressData?.average_mastery || 0) }}
-              />
-            </Card>
-          </Col>
         </Row>
 
         <Row gutter={[16, 16]}>
-          <Col xs={24} lg={12}>
-            <Card title="掌握度分析" style={{ height: '300px' }}>
-              <div style={{ padding: '20px 0' }}>
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ marginBottom: 8 }}>
-                    总体掌握度: {progressData?.average_mastery || 0}%
-                  </div>
-                  <AntProgress 
-                    percent={progressData?.average_mastery || 0}
-                    strokeColor={getMasteryColor(progressData?.average_mastery || 0)}
-                    size="small"
-                  />
-                </div>
-                
-                <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6' }}>
-                  <p>🎯 学习建议：</p>
-                  {(progressData?.average_mastery || 0) >= 80 && (
-                    <p>✅ 您的学习进展非常出色！继续保持这种学习节奏。</p>
-                  )}
-                  {(progressData?.average_mastery || 0) >= 60 && (progressData?.average_mastery || 0) < 80 && (
-                    <p>📚 学习进展良好，建议增加复习频率以提高掌握度。</p>
-                  )}
-                  {(progressData?.average_mastery || 0) >= 40 && (progressData?.average_mastery || 0) < 60 && (
-                    <p>📖 需要更多的学习时间，建议制定详细的学习计划。</p>
-                  )}
-                  {(progressData?.average_mastery || 0) < 40 && (
-                    <p>💪 建议增加学习时间，多使用笔记补全和题目解析功能。</p>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </Col>
-          
           <Col xs={24} lg={12}>
             <Card title="最近学习记录" style={{ height: '300px' }}>
               <div style={{ maxHeight: '200px', overflow: 'auto' }}>

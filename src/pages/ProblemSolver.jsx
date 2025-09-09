@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Card, Input, Button, Typography, message, Spin, Upload, Alert } from 'antd'
+import { Card, Input, Button, Typography, message, Spin, Upload, Alert, Modal, List } from 'antd'
 import { QuestionCircleOutlined, UploadOutlined } from '@ant-design/icons'
 import Layout from '../components/Layout'
 import MarkdownRenderer from '../components/MarkdownRenderer'
-import { api } from '../utils/api'
+import { api, historyApi, historyMutations } from '../utils/api'
 
 const { Title, Paragraph } = Typography
 const { TextArea } = Input
@@ -14,8 +14,13 @@ function ProblemSolver() {
   const [loading, setLoading] = useState(false)
   const [imageFile, setImageFile] = useState(null)
   const [isImageMode, setIsImageMode] = useState(false)
+  const [historyVisible, setHistoryVisible] = useState(false)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyList, setHistoryList] = useState([])
+  const [selectedHistory, setSelectedHistory] = useState(null)
+  const [editingContent, setEditingContent] = useState('')
 
-  const handleImageUpload = ({ file }) => {
+  const handleImageUpload = (file) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       setProblems(e.target.result)
@@ -70,8 +75,22 @@ function ProblemSolver() {
           style={{ marginBottom: 16 }}
         />
 
-        <Card style={{ marginBottom: 24 }}>
+        <Card style={{ marginBottom: 24, position: 'relative' }}>
           <Title level={4}>输入题目</Title>
+          <div style={{ position: 'absolute', right: 16, top: 16 }}>
+            <Button onClick={async () => {
+              setHistoryVisible(true)
+              setHistoryLoading(true)
+              try {
+                const res = await historyApi.list('problem')
+                setHistoryList(res.data || [])
+              } catch (e) {
+                message.error('加载已保存资料失败')
+              } finally {
+                setHistoryLoading(false)
+              }
+            }}>已保存的资料</Button>
+          </div>
           <Paragraph type="secondary">
             请输入需要解析的题目内容，或上传题目图片。AI将为您生成详细的解题步骤和分析。
           </Paragraph>
@@ -150,6 +169,110 @@ function ProblemSolver() {
             </div>
           </Card>
         )}
+
+        <Modal
+          title="已保存的资料（题目解析）"
+          open={historyVisible}
+          onCancel={() => { setHistoryVisible(false); setSelectedHistory(null) }}
+          width={900}
+          footer={null}
+        >
+          <div style={{ display: 'flex', gap: 16 }}>
+            <div style={{ width: 300 }}>
+              <List
+                bordered
+                loading={historyLoading}
+                dataSource={historyList}
+                locale={{ emptyText: '暂无保存的资料' }}
+                renderItem={(item) => (
+                  <List.Item
+                    onClick={async () => {
+                      try {
+                        const detail = await historyApi.get(item.id)
+                        setSelectedHistory(item)
+                        setEditingContent(detail.data?.content || '')
+                      } catch (e) {
+                        message.error('加载内容失败')
+                      }
+                    }}
+                    style={{ 
+                      cursor: 'pointer',
+                      border: selectedHistory?.id === item.id ? '1px solid #52c41a' : undefined,
+                      borderRadius: selectedHistory?.id === item.id ? 4 : undefined,
+                      background: selectedHistory?.id === item.id ? 'rgba(82,196,26,0.06)' : undefined
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 'bold' }}>{item.filename || '未命名.md'}</div>
+                      <div style={{ fontSize: 12, color: '#888' }}>{new Date(item.created_at).toLocaleString()}</div>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <TextArea
+                rows={18}
+                value={editingContent}
+                onChange={(e) => setEditingContent(e.target.value)}
+                placeholder={selectedHistory ? '在此编辑已保存内容…' : '左侧选择一条记录以查看'}
+              />
+              <div style={{ marginTop: 12, textAlign: 'right' }}>
+                <Button
+                  onClick={async () => {
+                    if (!selectedHistory) return
+                    try {
+                      const blobRes = await historyApi.download(selectedHistory.id)
+                      const url = window.URL.createObjectURL(new Blob([blobRes.data]))
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = selectedHistory.filename || 'problem.md'
+                      a.click()
+                      window.URL.revokeObjectURL(url)
+                    } catch (e) {
+                      message.error('下载失败')
+                    }
+                  }}
+                  style={{ marginRight: 8 }}
+                >
+                  下载到本机
+                </Button>
+                <Button
+                  danger
+                  onClick={async () => {
+                    if (!selectedHistory) return
+                    try {
+                      await historyMutations.remove(selectedHistory.id)
+                      setHistoryList((prev) => prev.filter(i => i.id !== selectedHistory.id))
+                      setSelectedHistory(null)
+                      setEditingContent('')
+                      message.success('删除成功')
+                    } catch (e) {
+                      message.error('删除失败')
+                    }
+                  }}
+                  style={{ marginRight: 8 }}
+                >
+                  删除
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={async () => {
+                    if (!selectedHistory) return
+                    try {
+                      await historyMutations.update(selectedHistory.id, editingContent)
+                      message.success('已保存修改')
+                    } catch (e) {
+                      message.error('保存失败')
+                    }
+                  }}
+                >
+                  保存修改
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Modal>
 
         {loading && (
           <Card style={{ textAlign: 'center', padding: '40px' }}>

@@ -3,7 +3,6 @@ import { Card, Row, Col, Statistic, List, Typography, Button } from 'antd'
 import { 
   FileTextOutlined, 
   EyeOutlined, 
-  TrophyOutlined,
   PlusOutlined 
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -59,7 +58,7 @@ function Dashboard() {
         <Title level={2}>学习概览</Title>
         
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={12}>
             <Card>
               <Statistic
                 title="总笔记数"
@@ -69,23 +68,12 @@ function Dashboard() {
               />
             </Card>
           </Col>
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={12}>
             <Card>
               <Statistic
                 title="总访问次数"
                 value={progress?.total_access || 0}
                 prefix={<EyeOutlined />}
-                loading={loading}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card>
-              <Statistic
-                title="平均掌握度"
-                value={progress?.average_mastery || 0}
-                suffix="%"
-                prefix={<TrophyOutlined />}
                 loading={loading}
               />
             </Card>
