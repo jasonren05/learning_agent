@@ -1,0 +1,22 @@
+# Cloud Studio 学习助手项目配置文件
+# 该项目包含 React 前端和 Flask 后端，需要同时运行两个服务
+
+autoOpen: true # 打开工作空间时自动运行所有应用
+apps:
+  # 后端 Flask API 服务
+  - port: 5001
+    run: python app.py
+    root: ./
+    name: Flask 后端 API
+    description: 学习助手后端服务，提供用户认证、内容生成等API接口
+    autoOpen: true
+    autoPreview: false  # 后端API不需要预览窗口
+
+  # 前端 React 应用
+  - port: 5173
+    run: npm run dev
+    root: ./
+    name: React 前端应用
+    description: 学习助手前端界面，提供用户交互和内容展示
+    autoOpen: true
+    autoPreview: true   # 前端应用自动打开预览窗口
